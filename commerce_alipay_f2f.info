@@ -1,0 +1,9 @@
+name = Alipay F2F PAYMENT
+core = 7.x
+description = 'Alipay QR Payment method for Drupal commerce'
+dependencies[] = commerce
+dependencies[] = commerce_ui
+dependencies[] = commerce_order
+dependencies[] = entity
+dependencies[] = rules
+package = custom commerce
