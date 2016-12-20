@@ -11,8 +11,8 @@
 第三步，在DRUPAL启用commerce alipay f2f 模块,然后设置好相关帐号参数，其中包括APP ID,支付宝公钥以及应用私钥。
 
  
-
 项目地址，https://github.com/shiningw/Alipayf2f
 Drupal sandbox, https://www.drupal.org/sandbox/jiaxin/2837895
 演示地址，http://test.zhetenger.com
   
+
