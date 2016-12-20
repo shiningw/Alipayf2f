@@ -90,9 +90,9 @@ function commerce_alipay_f2f_settings_form($settings = NULL) {
   $form['notify_url'] = array(
 	'#type' => 'textfield',
 	'#title' => t('Notify Url'),
-	'#description' => t('If you want to write your own handler for processing payment notifications from Alipay, input the url here'),
+	'#description' => t('If you want to write your own handler for processing payment notifications from Alipay, replace the url here'),
 	'#default_value' => isset($settings['notify_url'])?$settings['notify_url']:$GLOBALS['base_url'].'/commerce/alipay_f2f/notify',
-	'#required'	=> FALSE,
+	'#required'	=> TRUE,
   
   
   );
