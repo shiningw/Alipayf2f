@@ -273,9 +273,36 @@ function commerce_alipay_f2f_redirect_form($form, &$form_state, $order, $payment
                     '#type' => 'markup',
                     '#markup' => "<div class='qrcode'></div>",
                     );
-  
-  
+  $form['order_number'] = array(
+			'#type' => 'hidden',
+			'#value' => trim($order->order_number),
+    );
+ 
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Check'),
+    '#submit' => array('commerce_alipay_f2f_payment_status_check'),
+  );
   return $form;
+}
+
+ 
+
+function commerce_alipay_f2f_payment_status_check($form,&$form_state) {
+	
+	 if($order_number = $form_state['values']['order_number'])
+				$order = commerce_order_load($order_number);
+	  
+	  if($order->status == 'completed') {
+		  
+		     drupal_set_message(t('Payment completed'));
+		    commerce_payment_redirect_pane_next_page($order);
+		     
+	  }else {
+		  
+		   drupal_set_message(t('Payment has not been completed yet'),'warning');
+	  }
+	   
 }
 
 /**

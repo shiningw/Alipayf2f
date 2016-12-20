@@ -57,6 +57,9 @@
 			}
 
 			$('.qrcode').qrcode(options);
+
+
+			  
    }
 	
   Drupal.behaviors.commerce_alipay_f2f = {
