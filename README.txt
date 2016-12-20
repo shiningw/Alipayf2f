@@ -2,7 +2,7 @@
 
 第一步，在手机上打开你的支付宝APP，扫描上面的二维码，按照提示补全个人信息。如要求激活可先不必理会。
 
-第二步，打开https://openhome.alipay.com/platform/appManage.htm  登录创建应用，设置好私钥保存，记下appID
+第二步，打开https://openhome.alipay.com/platform/appManage.htm，登录创建应用，设置好私钥保存，记下appID
 
 第三步，在DRUPAL启用commerce alipay f2f 模块,然后设置好相关帐号参数，其中包括APP ID,支付宝公钥以及应用私钥。
 
