@@ -3,16 +3,28 @@
 
 class f2fUtility {
 	
-	public $charset = 'UTF-8';
-	public $bizParas = array();
-	public $apiParas = array();
-	public $gatewayUrl = "https://openapi.alipay.com/gateway.do";
-	public $pri_key = '';
-	
+	protected $charset = 'UTF-8';
+	private $bizParas = array();
+	private $apiParas = array();
+	protected $gatewayUrl = "https://openapi.alipay.com/gateway.do";
+	private $priKey = '';
+	private $pubKey = '';
+
 	
 	static public function create(){
 		
 		  return new self();
+	}
+	
+	public function setPrivateKey($key = ''){
+		
+		        $this->priKey = $key;
+	}
+	
+	
+	public function setPubKey($key = ''){
+		
+		        $this->pubKey = $key;
 	}
 	
 	public function setBizContent($Paras = array()){
@@ -32,7 +44,7 @@ class f2fUtility {
 		 return $this->bizParas['biz_content'];
 	}
 	
-	public function defaultApiParas(){
+	protected function defaultApiParas(){
 		
 		     $this->apiParas = array(
 						'version' => '1.0',
@@ -74,7 +86,7 @@ class f2fUtility {
 		   return $this->apiParas;
 	}
 	
-	public function getToBeSignedParas() {
+	protected function getToBeSignedParas() {
 			$this->setBizContent();
 
 		 return array_merge($this->getApiParas(),array('biz_content' => $this->getBizContent()));
@@ -84,7 +96,7 @@ class f2fUtility {
 	
 	public function getUrl(){
 		
-		  $this->apiParas['sign'] = $this->rsaSign($this->getToBeSignedParas(),$this->pri_key);
+		  $this->apiParas['sign'] = $this->sign($this->getToBeSignedParas());
 		  
           $requestUrl = $this->gatewayUrl . "?";
 		  $requestUrl .= $this->urlEncode($this->apiParas);
@@ -133,15 +145,20 @@ class f2fUtility {
 			return $data;
 	}
 
-
-	public function rsaSign($para = array(),$rsakey, $sign_type = 'RSA') {
+	protected function sign($paras = array(),$type = 'RSA') {
+		
+		return $this->rsaSign($this->getSignContent($paras),$this->priKey,$type);
+	  
+	}
 	
-			$data = $this->getSignContent($para);
-	
-			if(!empty($rsakey)) {
-				$res = "-----BEGIN RSA PRIVATE KEY-----\n" .
-				wordwrap($rsakey, 64, "\n", true) .
-				"\n-----END RSA PRIVATE KEY-----";
+	public function rsaSign($data = '',$rsakey, $sign_type = 'RSA') {
+		
+			try{
+				
+				$res = $this->keyWrap($rsakey);
+			}catch (Exception $e) {
+				
+				 echo 'exception: ',  $e->getMessage(), "\n";  
 			}
 
 			if ("RSA2" == $sign_type) {
@@ -155,7 +172,34 @@ class f2fUtility {
 	}
 	
 	
-	public function urlEncode($paras = array()) {
+	protected function keyWrap($key = '', $type = 'private') {
+		
+		  if (empty($key)) {
+			  
+			  throw new Exception('Key is empty');
+		  }
+		
+		   if($type == 'private') {
+			   
+			     $res = "-----BEGIN RSA PRIVATE KEY-----\n";
+			     $res .= wordwrap($key, 64, "\n", true);
+				 $res .= "\n-----END RSA PRIVATE KEY-----";
+				
+		   }else {
+			   
+			     $res = "-----BEGIN PUBLIC KEY-----\n";
+			     $res .= wordwrap($key, 64, "\n", true);
+				 $res .= "\n-----END PUBLIC KEY-----";
+			     
+		   }
+		   
+		   return $res;
+		   
+		   
+	}
+	
+	
+	protected function urlEncode($paras = array()) {
 		
 		
 		$str = '';
@@ -169,7 +213,7 @@ class f2fUtility {
 	}
 
 
-	public function getSignContent($params) {
+	protected function getSignContent($params) {
 			ksort($params);
 
 			$stringToBeSigned = "";
@@ -192,13 +236,15 @@ class f2fUtility {
 			return $stringToBeSigned;
 	}
 	
-	public function verifySign($data, $sign, $pubkey, $signType = 'RSA') {
+	public function verify($paras = array(),$notify_sign) {
+  
+      return (bool) $this->verifySign($this->getSignContent($paras),$notify_sign);
+	}
+	
+	protected function verifySign($data, $sign, $signType = 'RSA') {
 
-		$res = "-----BEGIN PUBLIC KEY-----\n" .
-				wordwrap($pubkey, 64, "\n", true) .
-				"\n-----END PUBLIC KEY-----";
-
-
+		$res = $this->keyWrap($this->pubKey,'public');
+		
 		if ("RSA2" == $signType) {
 			$result = (bool)openssl_verify($data, base64_decode($sign), $res, OPENSSL_ALGO_SHA256);
 		} else {

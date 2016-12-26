@@ -194,7 +194,7 @@ function commerce_alipay_f2f_redirect_form($form, &$form_state, $order, $payment
 	}
 	
 	$pri_key = preg_replace('/\s*/','',$settings['private_key']);
-	$utility->pri_key = $settings['private_key'];
+	$utility->setPrivateKey($settings['private_key']);
 
 
 	$requestUrl = $utility->getUrl();
@@ -298,13 +298,13 @@ function commerce_alipay_f2f_notify_handler() {
   
    if(commerce_alipay_f2f_notify_validate($order,$payment_method,$alipay_notify)) {
 	   
-	     watchdog('commerce_alipay_f2f','verfication succeed!');
+	     watchdog('commerce_alipay_f2f','verification succeed!');
 	     commerce_alipay_f2f_notify_submit($order,$payment_method,$alipay_notify);
 	     //output the string 'success' so that Alipay will not send the same notifcation any more
 	     print 'success';
    }else {
 	   
-	   watchdog('commerce_alipay_f2f','verfication failed!');
+	   watchdog('commerce_alipay_f2f','verification failed!');
    }
   
 }
@@ -347,20 +347,14 @@ function commerce_alipay_f2f_notify_validate($order, $payment_method, $notify) {
   
   $notify_sign = $notify['sign'];
   
-  $pubkey = $payment_method['settings']['alipay_pub_key'];
+  $utility->setPubKey($payment_method['settings']['alipay_pub_key']);
   
   $notify = drupal_get_query_parameters($notify,array('sign','sign_type'));
 
   
-    $signdata = '';
-	
-	$signdata = $utility->getSignContent($notify);
-	 
-  
-    $result = $utility->verifySign($signdata,$notify_sign,$pubkey);
+    return $utility->verify($notify,$notify_sign);
  
 
-       return (bool) $result;
 }
 
 function commerce_alipay_f2f_notify_submit($order, $payment_method, $notify) {
