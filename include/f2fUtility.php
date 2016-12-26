@@ -5,25 +5,108 @@ class f2fUtility {
 	
 	public $charset = 'UTF-8';
 	public $bizParas = array();
+	public $apiParas = array();
 	public $gatewayUrl = "https://openapi.alipay.com/gateway.do";
+	public $pri_key = '';
 	
-	public function setBizContent($Paras){
+	
+	static public function create(){
+		
+		  return new self();
+	}
+	
+	public function setBizContent($Paras = array()){
 
         if(!empty($Paras)){
             $this->bizParas['biz_content'] = json_encode($Paras,JSON_UNESCAPED_UNICODE);
         }else{
 			
-			$this->bizParas['biz_content'] = '';
+			$this->bizParas['biz_content'] = json_encode($this->bizParas,JSON_UNESCAPED_UNICODE);;
 		}
 
         
 	}
 	
+	public function getBizContent() {
+		
+		 return $this->bizParas['biz_content'];
+	}
+	
+	public function defaultApiParas(){
+		
+		     $this->apiParas = array(
+						'version' => '1.0',
+						'format' => 'json',
+						'sign_type'  => 'RSA',
+						'method' => 'alipay.trade.precreate',
+						'timestamp' => date("Y-m-d H:i:s"),
+						'auth_token' => '',
+						'charset' => $this->charset,
+						'terminal_type' => '',
+						'terminal_info' => '',
+						'prod_code' => '',
+						'app_auth_token' => '',
+				);
+		return $this->apiParas;
+	}
+	
+
 	public function getBizParas() {
 		   
 		   return $this->bizParas;
 	}
 	
+    public function setBizParas($key,$value) {
+		
+		   $this->bizParas[$key] = $value;
+	}
+	
+	
+	public function setApiParas($key,$value){
+		
+		  $this->apiParas[$key] = $value;
+	}
+	
+	public function getApiParas(){
+		
+		   $this->apiParas = $this->apiParas + $this->defaultApiParas();
+		   
+		   return $this->apiParas;
+	}
+	
+	public function getToBeSignedParas() {
+			$this->setBizContent();
+
+		 return array_merge($this->getApiParas(),array('biz_content' => $this->getBizContent()));
+
+		
+	}
+	
+	public function getUrl(){
+		
+		  $this->apiParas['sign'] = $this->rsaSign($this->getToBeSignedParas(),$this->pri_key);
+		  
+          $requestUrl = $this->gatewayUrl . "?";
+		  $requestUrl .= $this->urlEncode($this->apiParas);
+		  
+		  return $requestUrl;
+	
+	}
+	
+   public function getPostData(){
+	    	return $this->urlEncode(array('biz_content' => $this->getBizContent()));
+
+   }
+	
+   public function httpHeaders(){
+	   
+	   return array(
+			'content-type' => 'application/x-www-form-urlencoded',
+			'charset' => $this->charset,
+      
+	   );
+	   
+   }
 	public function checkEmpty($value) {
 			if (!isset($value))
 				return true;
@@ -192,3 +275,5 @@ class f2fUtility {
 	}
 
 }
+
+

@@ -5,13 +5,10 @@
  *  Alipay FACE TO FACE PAYMENT METHOD for Drupal Commerce
  */
 
+module_load_include('php','commerce_alipay_f2f','include/f2fUtility');
 /**
  * Implements hook_menu().
  */
-
-define('CHARSET',"UTF-8");
-define('GATEWAYURL',"https://openapi.alipay.com/gateway.do");
-
 
 function commerce_alipay_f2f_menu() {
   // menu callback for processing notifications from Alipay
@@ -153,8 +150,7 @@ function commerce_alipay_f2f_redirect_form($form, &$form_state, $order, $payment
 
   $form = array();
   $wrapper = entity_metadata_wrapper('commerce_order', $order);
-
-  //$vpn_order = commerce_vpn_order_load($order->order_id);
+  $utility = f2fUtility::create();
   
   
   $product_ids = array();
@@ -206,46 +202,33 @@ function commerce_alipay_f2f_redirect_form($form, &$form_state, $order, $payment
 		//'alipay_store_id' => '',
 	);
 	
-    $apiParas = array(
-    'app_id' => $settings['app_id'],
-    'version' => '1.0',
-    'format' => 'json',
-    'sign_type'  => 'RSA',
-    'method' => 'alipay.trade.precreate',
-    'timestamp' => date("Y-m-d H:i:s"),
-    'auth_token' => '',
-    'notify_url' => $settings['notify_url'],
-	'charset' => CHARSET,
-	'terminal_type' => '',
-	'terminal_info' => '',
-	'prod_code' => '',
-	'app_auth_token' => '',
-  );
-
-    module_load_include('php','commerce_alipay_f2f','include/f2fUtility');
-	$utility = new f2fUtility();
-	$utility->setBizContent($bizParas);
-	$bizdata = $utility->getBizParas();
-
-  
-	$allparas = array_merge($apiParas,$bizdata);
    
-	$pri_key = preg_replace('/\s*/','',$settings['private_key']);
-	
-
-	$apiParas['sign'] = $utility->rsaSign($allparas,$pri_key);
-    $requestUrl = $utility->gatewayUrl . "?";
-	$requestUrl .= $utility->urlEncode($apiParas);
-	
-	$postStrBody = $utility->urlEncode($bizdata);
-  
-	$header = array(
-			'content-type' => 'application/x-www-form-urlencoded',
-			'charset' => $utility->charset,
-      
-	);
-	
+    $paras = array(
+				'app_id' => $settings['app_id'],
+				'notify_url' => $settings['notify_url']
+			);
+			
+    foreach($paras as $key => $value){
 		
+		   $utility->setApiParas($key,$value);
+		
+	}
+	
+	foreach($bizParas as $key => $value){
+		  
+		   $utility->setBizParas($key,$value);
+	}
+	
+	$pri_key = preg_replace('/\s*/','',$settings['private_key']);
+	$utility->pri_key = $settings['private_key'];
+
+
+	$requestUrl = $utility->getUrl();
+	
+	$postStrBody = $utility->getPostData();
+  
+	$header = $utility->httpHeaders();
+
 	$res = drupal_http_request($requestUrl,array('method' => 'POST','data' => $postStrBody,'headers' => $header));
    //dpm($res);
    if($res->code == 200) {
@@ -387,8 +370,7 @@ function commerce_alipay_f2f_notify_validate($order, $payment_method, $notify) {
     return FALSE;
   }
   
-  module_load_include('php','commerce_alipay_f2f','include/f2fUtility');
-  $utility = new f2fUtility();
+  $utility = f2fUtility::create();
   // Log an entry of the notification received for a transaction.
   watchdog('commerce_alipay_f2f', 'Customer returned from Alipay with the following data:<pre>@notify</pre>', array('@notify' => print_r($notify, TRUE)));
   
