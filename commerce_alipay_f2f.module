@@ -47,15 +47,6 @@ function commerce_alipay_f2f_commerce_payment_method_info() {
 function commerce_alipay_f2f_settings_form($settings = NULL) {
   $form = array();
 
-  $settings = (array) $settings + array(
-    'apimethod' => 'alipay.trade.precreate',
-    'seller_id' => '',
-    'app_id' => '',
-    'private_key' => '',
-    'debug' => '',
-    'alipay_pub_key' => '',
-    'notify_url' => '',
-  );
   // Declare form settings to configure the Alipay payment method.
   $form['apimethod'] = array(
     '#type' => 'select',
@@ -179,27 +170,10 @@ function commerce_alipay_f2f_redirect_form($form, &$form_state, $order, $payment
 		'out_trade_no' => $order->order_number,
 		'subject' => t('!site_name--!product', array('!site_name' => $site_name,'!product' => $product_title)),
 		'body' => commerce_alipay_f2f_data_body($order),
-		/*'goods_detail' => array(
-		      array(
-		        'goods_id' => 'p1',
-		        'goods_name' => 'ipad',
-		        'price'  => 1000,
-		        'quantity' => 1,
-		        ),
-		      array(
-		        'goods_id' => 'p2',
-		        'goods_name' => 'ipad2',
-		        'price'  => 2000,
-		        'quantity' => 1,
-		        ),
-		),*/
 		'extend_params' => ['sys_service_provider_id' => ''],
 		'timeout_express' => '5m',
 		'total_amount' => commerce_currency_amount_to_decimal($amount, 'CNY'),
-		//'undiscountable_amount' => '0.10',
-		//'store_id' => '',
-		//'operator_id' => '',
-		//'alipay_store_id' => '',
+
 	);
 	
    
@@ -230,7 +204,7 @@ function commerce_alipay_f2f_redirect_form($form, &$form_state, $order, $payment
 	$header = $utility->httpHeaders();
 
 	$res = drupal_http_request($requestUrl,array('method' => 'POST','data' => $postStrBody,'headers' => $header));
-   //dpm($res);
+
    if($res->code == 200) {
 	   
 	     $data = json_decode($res->data);
@@ -289,15 +263,8 @@ function commerce_alipay_f2f_payment_status_check($form,&$form_state) {
 }
 
 /**
- * Redirects the transaction to Alipay's payment gateway.
- */
-function commerce_alipay_f2f_redirect($form, &$form_state) {
-	
-  form_state_values_clean($form_state);
-  $data = drupal_http_build_query($form_state['values']);
-  $form_state['redirect'] = ALIPAY_GATEWAY . $data;
-}
-
+ * handler for processing notifications from Alipay
+**/
 
 function commerce_alipay_f2f_notify_handler() {
 
@@ -341,6 +308,10 @@ function commerce_alipay_f2f_notify_handler() {
    }
   
 }
+
+/**
+ * checking if new notification payment status is higher than the status of the same, processed notifications 
+**/
 
 function __transaction_status_is_lower($current_status,$notify_status) {
 	 
@@ -396,8 +367,7 @@ function commerce_alipay_f2f_notify_submit($order, $payment_method, $notify) {
   // Attempt to load prior authorization capture IPN created previously.
   $transactions = commerce_payment_transaction_load_multiple(array(), array('remote_id' => $notify["trade_no"]));
   if (!empty($transactions)) {
-    // @TODO: Load the prior transaction ID and update with the capture values.
-    // There is probably some special handling necessary in this case.
+  
     $transaction = reset($transactions);
     
   }
