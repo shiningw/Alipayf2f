@@ -62,7 +62,6 @@ function commerce_alipay_f2f_settings_form($settings = NULL) {
   $form['seller_id'] = array(
     '#type' => 'textfield',
     '#title' => t('Seller ID'),
-    '#description' => t('The seller email with which the Alipay account was registered for the corresponding type of service.'),
     '#default_value' => isset($settings['seller_id'])?$settings['seller_id']:'',
     '#required' => FALSE,
   );
@@ -121,8 +120,12 @@ function commerce_alipay_f2f_settings_form($settings = NULL) {
  */
 function commerce_alipay_f2f_submit_form($payment_method, $pane_values, $checkout_pane, $order) {
 
-  $form['alipay_information'] = array(
-    '#markup' => '<span class="commerce-alipay-f2f-info">' . t('Continue') . '</span>',
+  
+  $form['f2f_info'] = array(
+  
+          '#markup' => t('Proceed to generate the payment QR code.'),
+          '#prefix' => '<span class="alipay-f2f-info">',
+          '#suffix' => '</span>', 
   );
 
   return $form;
@@ -218,6 +221,7 @@ function commerce_alipay_f2f_redirect_form($form, &$form_state, $order, $payment
 		 }else{
 			 
 			  drupal_set_message('Failed to get payment QRcode','error');
+			  watchdog("notice",'Failed to get payment QRcode');
 		 }
    }else {
 	   
@@ -252,7 +256,7 @@ function commerce_alipay_f2f_payment_status_check($form,&$form_state) {
 	  
 	  if($order->status == 'completed') {
 		  
-		     drupal_set_message(t('Payment completed'));
+		    // drupal_set_message(t('Payment completed'));
 		    commerce_payment_redirect_pane_next_page($order);
 		     
 	  }else {
@@ -444,7 +448,23 @@ function commerce_alipay_f2f_data_body($order) {
   }
 }
 
+function commerce_alipay_f2f_icon_label($label,$path){
+	
+	
+				$img_markup = theme('image', array(
+											'path' => $path . 'alipay.gif',
+											'title' => $label,
+											'alt' => $label,
+											'attributes' => array('class' => 'commerce-alipay-f2f-icon'),
+									  )
+							);
+			    $html = $img_markup. '<span class="commerce-alipay-f2f-label">' . $label . '</span>';
+			    
+			    return $html;
+}
+
 function commerce_alipay_f2f_form_alter(&$form,&$form_state,$form_id) {
+	
 
   if($form_id == 'commerce_checkout_form_payment') {
 	
@@ -461,6 +481,29 @@ function commerce_alipay_f2f_form_alter(&$form,&$form_state,$form_id) {
 			     
 		  );
 	 }
+  }
+  
+  if($form_id == 'commerce_checkout_form_checkout') {
+	  
+		if (!empty($form['commerce_payment']['payment_method']['#options'])) {
+		   
+			foreach ($form['commerce_payment']['payment_method']['#options'] as $key => &$value) {
+					list($method_id, $rule_name) = explode('|', $key);
+
+
+					if ($method_id == 'alipay_f2f') {
+						    //get payment icon path
+							$path = drupal_get_path('module', 'commerce_alipay_f2f') . '/images/';
+                            $label = t("Alipay F2F QR Payment");
+						
+							$value = commerce_alipay_f2f_icon_label($label,$path);
+
+
+							break;
+					}
+			}
+		}
+	  
   }
 }
 
