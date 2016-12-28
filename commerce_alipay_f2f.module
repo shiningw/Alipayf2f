@@ -217,7 +217,13 @@ function commerce_alipay_f2f_redirect_form($form, &$form_state, $order, $payment
 			      watchdog("notice","payment QR code fetched successfully");
 			      $aliResp = $data->alipay_trade_precreate_response;
 			      drupal_add_js(array('commerce_alipay_f2f' => array('ali_qrcode' => $aliResp->qr_code),), 'setting');
-
+			      $linktext = t('Please click here');
+			      $helpmsg = t('if you are viewing this page on a mobile or unable to scan the QR code for some reason.This link can open the Alipay App on your phone');
+			      $form['qrcode_link'] = array(
+				    '#type' => 'item',
+				    '#markup' => sprintf('<div id="Alipay-qrlink"><a href="%s">%s</a> %s</div>',$aliResp->qr_code,$linktext,$helpmsg),
+					);
+                  
 		 }else{
 			 
 			  drupal_set_message('Failed to get payment QRcode','error');
@@ -234,6 +240,8 @@ function commerce_alipay_f2f_redirect_form($form, &$form_state, $order, $payment
                     '#type' => 'markup',
                     '#markup' => "<div class='qrcode'></div>",
                     );
+  
+  
   $form['order_number'] = array(
 			'#type' => 'hidden',
 			'#value' => trim($order->order_number),
