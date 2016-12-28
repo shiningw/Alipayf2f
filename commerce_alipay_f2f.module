@@ -401,7 +401,7 @@ function commerce_alipay_f2f_notify_submit($order, $payment_method, $notify) {
         $transaction->status = COMMERCE_PAYMENT_STATUS_PENDING;
         $transaction->message = t('Waiting for the customer to pay');
         commerce_order_status_update($order, 'wait_buyer_pay');
-
+        break;
       // Transaction complete.
       case 'TRADE_FINISHED':
         $transaction->status = COMMERCE_PAYMENT_STATUS_SUCCESS;
