@@ -273,7 +273,7 @@ class f2fUtility {
 				if ("@" != substr($v, 0, 1)) 
 				{
 
-					$postBodyString .= "$k=" . urlencode(characet($v, $this->charset)) . "&";
+					$postBodyString .= "$k=" . urlencode($this->characet($v, $this->charset)) . "&";
 					$encodeArray[$k] = $this->characet($v, $this->charset);
 				} else 
 				{
@@ -305,6 +305,7 @@ class f2fUtility {
 
 
 		$reponse = curl_exec($ch);
+
 
 		if (curl_errno($ch)) {
 
