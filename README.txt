@@ -13,6 +13,6 @@
  
 项目地址，https://github.com/shiningw/Alipayf2f
 Drupal sandbox, https://www.drupal.org/sandbox/jiaxin/2837895
-演示地址，http://test.zhetenger.com
+Https://techjoy.taobao.com
   
 
